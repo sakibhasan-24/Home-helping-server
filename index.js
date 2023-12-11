@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
+// console.log(jwt);
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const app = express();
@@ -28,10 +30,22 @@ async function run() {
 
   try {
     await client.connect();
+
+    // token
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, "secret", { expiresIn: "1h" });
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+        })
+        .send({ success: true, token: token });
+    });
     app.get("/services", async (req, res) => {
       const cursor = homeServiceCollections.find();
       const services = await cursor.toArray();
-
       res.send(services);
     });
     app.get("/services/:id", async (req, res) => {
@@ -63,6 +77,14 @@ async function run() {
     app.post("/booking", async (req, res) => {
       const data = req.body;
       const result = await bookingCollections.insertOne(data);
+      console.log(result);
+      res.send(result);
+    });
+    app.delete("/booking/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await bookingCollections.deleteOne({
+        _id: new ObjectId(id),
+      });
       console.log(result);
       res.send(result);
     });
