@@ -1,16 +1,17 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 // console.log(jwt);
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
-app.use(cors());
+app.use(cors({ origin: ["http://localhost:5173"], credentials: true }));
 app.use(express.json());
-
+app.use(cookieParser());
 const uri = `mongodb+srv://House-services:${process.env.DB_PASSWORD}@Home-service.wlfdec9.mongodb.net/?retryWrites=true&w=majority`;
-console.log(uri);
+// console.log(uri);
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -38,10 +39,9 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: true,
-          sameSite: "none",
+          secure: false,
         })
-        .send({ success: true, token: token });
+        .send({ success: true, token });
     });
     app.get("/services", async (req, res) => {
       const cursor = homeServiceCollections.find();
@@ -67,6 +67,7 @@ async function run() {
     });
     app.get("/bookings", async (req, res) => {
       let query = {};
+      console.log("token is", req.cookies.token);
       if (req.query.email) {
         query = { email: req.query.email };
       }
@@ -76,6 +77,7 @@ async function run() {
     // booking create
     app.post("/booking", async (req, res) => {
       const data = req.body;
+
       const result = await bookingCollections.insertOne(data);
       console.log(result);
       res.send(result);
