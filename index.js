@@ -24,6 +24,7 @@ const client = new MongoClient(uri, {
 // vereify token
 const vereifyToken = async (req, res, next) => {
   const token = req.cookies?.token;
+  console.log("cookies ", token);
   if (!token) {
     return res.status(401).json({ msg: "No token, authorization denied" });
   }
@@ -33,7 +34,6 @@ const vereifyToken = async (req, res, next) => {
     }
 
     req.user = decoded;
-
     next();
   });
 };
@@ -53,6 +53,8 @@ async function run() {
     app.post("/jwt", async (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, "secret", { expiresIn: "1h" });
+
+      console.log(token);
       res
         .cookie("token", token, {
           httpOnly: true,
@@ -64,9 +66,10 @@ async function run() {
     app.get("/services", async (req, res) => {
       const cursor = homeServiceCollections.find();
       const services = await cursor.toArray();
+      //   console.log(services);
       res.send(services);
     });
-    app.get("/services/:id", vereifyToken, async (req, res) => {
+    app.get("/services/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const options = {
@@ -85,22 +88,32 @@ async function run() {
     });
     app.get("/bookings", vereifyToken, async (req, res) => {
       let query = {};
-      console.log("token from verrify", req.user);
+      //   console.log("token from verrify", req.user);
+      //   console.log(req.query.email);
       if (req.query.email) {
         query = { email: req.query.email };
+      }
+      if (req.user?.email !== req.query.email) {
+        // console.log("not valid");
+        // console.log(req.user?.email + " user email");
+        // console.log(req.query.email + " user query email");
+        return res.send("you are not allowed to see this");
       }
       const result = await bookingCollections.find(query).toArray();
       res.send(result);
     });
+    app.post("/jwtlogout", async (req, res) => {
+      res.clearCookie("token");
+    });
     // booking create
-    app.post("/booking", vereifyToken, async (req, res) => {
+    app.post("/booking", async (req, res) => {
       const data = req.body;
 
       const result = await bookingCollections.insertOne(data);
       //   console.log(result);
       res.send(result);
     });
-    app.delete("/booking/:id", vereifyToken, async (req, res) => {
+    app.delete("/booking/:id", async (req, res) => {
       const id = req.params.id;
       const result = await bookingCollections.deleteOne({
         _id: new ObjectId(id),
