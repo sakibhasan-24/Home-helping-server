@@ -46,7 +46,7 @@ const vereifyToken = async (req, res, next) => {
   console.log("cookies ", token);
   console.log(req.token);
   if (!token) {
-    return res.status(401).json(token);
+    return res.status(401).json({ message: "unauthorized!" });
   }
   jwt.verify(token, "secret", (err, decoded) => {
     if (err) {
@@ -80,7 +80,7 @@ async function run() {
           secure: true,
           sameSite: "none",
         })
-        .send({ success: true, token });
+        .send({ success: true, token, user });
     });
 
     app.get("/services", async (req, res) => {
@@ -119,9 +119,6 @@ async function run() {
         query = { email: req.query.email };
       }
       if (req.user?.email !== req.query.email) {
-        // console.log("not valid");
-        // console.log(req.user?.email + " user email");
-        // console.log(req.query.email + " user query email");
         return res.send("you are not allowed to see this");
       }
       try {
