@@ -42,7 +42,8 @@ const client = new MongoClient(uri, {
 // vereify token
 const vereifyToken = async (req, res, next) => {
   const token = req.cookies?.token;
-  // console.log("cookies ", token);
+  console.log("cookies ", token);
+  console.log(req);
   if (!token) {
     return res.status(401).json({ msg: "No token, authorization denied" });
   }
@@ -84,7 +85,7 @@ async function run() {
     app.get("/services", async (req, res) => {
       const cursor = homeServiceCollections.find();
       const services = await cursor.toArray();
-      //   console.log(services);
+      console.log(services);
       res.send(services);
     });
     app.get("/services/:id", async (req, res) => {
@@ -106,7 +107,7 @@ async function run() {
     });
     app.get("/bookings", vereifyToken, async (req, res) => {
       let query = {};
-      //   console.log("token from verrify", req.user);
+      console.log("token from verrify", req.user);
       console.log(req.query.email);
       const size = parseInt(req.query.size);
       const page = parseInt(req.query.page);
