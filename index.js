@@ -65,7 +65,7 @@ async function run() {
     .collection("BookingCollections");
 
   try {
-    await client.connect();
+    client.connect();
 
     // token
     app.post("/jwt", async (req, res) => {
