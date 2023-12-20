@@ -52,7 +52,7 @@ async function run() {
     // token
     app.post("/jwt", async (req, res) => {
       const user = req.body;
-      const token = jwt.sign(user, "secret", { expiresIn: "1h" });
+      const token = jwt.sign(user, "secret");
 
       console.log(token);
       res
@@ -90,6 +90,11 @@ async function run() {
       let query = {};
       //   console.log("token from verrify", req.user);
       //   console.log(req.query.email);
+      const size = parseInt(req.query.size);
+      const page = parseInt(req.query.page);
+
+      console.log(page * size);
+      console.log(req.query);
       if (req.query.email) {
         query = { email: req.query.email };
       }
@@ -99,17 +104,24 @@ async function run() {
         // console.log(req.query.email + " user query email");
         return res.send("you are not allowed to see this");
       }
-      const result = await bookingCollections.find(query).toArray();
+      const result = await bookingCollections
+        .find(query)
+
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+      const count = await bookingCollections.countDocuments(query);
+      console.log(count);
       res.send(result);
     });
     // single booking
     app.get("/bookings/:id", async (req, res) => {
-      console.log(req.params.id);
+      // console.log(req.params.id);
       const result = await bookingCollections.findOne({
         _id: new ObjectId(req.params.id),
       });
 
-      console.log(result);
+      // console.log(result);
       res.send(result);
     });
     app.post("/jwtlogout", async (req, res) => {
@@ -123,8 +135,31 @@ async function run() {
       //   console.log(result);
       res.send(result);
     });
-    app.patch("/booking/:id", vereifyToken, async (req, res) => {
-      console.log(req.user.id, req.params.id);
+    app.put("/booking/update/:id", async (req, res) => {
+      const id = { _id: new ObjectId(req.params.id) };
+      const data = req.body;
+      console.log("data", data);
+      const options = { upsert: true };
+      const updateInfo = {
+        $set: {
+          customerName: data.name,
+          phone: data.phone,
+          address: data.address,
+          detail: data.detail,
+          date: data.date,
+        },
+      };
+
+      console.log(updateInfo);
+      // console.log("updated Info", updateInfo);
+      const result = await bookingCollections.updateOne(
+        id,
+        updateInfo,
+        options
+      );
+
+      // console.log(result);
+      res.send(result);
     });
     app.delete("/booking/:id", async (req, res) => {
       const id = req.params.id;
