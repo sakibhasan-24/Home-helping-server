@@ -26,6 +26,7 @@ app.use(
 //     credentials: true,
 //   })
 // );
+// http://localhost:5000/
 app.use(express.json());
 app.use(cookieParser());
 const uri = `mongodb+srv://House-services:${process.env.DB_PASSWORD}@Home-service.wlfdec9.mongodb.net/?retryWrites=true&w=majority`;
@@ -43,9 +44,9 @@ const client = new MongoClient(uri, {
 const vereifyToken = async (req, res, next) => {
   const token = req.cookies?.token;
   console.log("cookies ", token);
-  console.log(req);
+  console.log(req.token);
   if (!token) {
-    return res.status(401).json({ msg: "No token, authorization denied" });
+    return res.status(401).json(token);
   }
   jwt.verify(token, "secret", (err, decoded) => {
     if (err) {
@@ -72,8 +73,7 @@ async function run() {
     app.post("/jwt", async (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, "secret");
-
-      console.log(token);
+      // console.log(token);
       res
         .cookie("token", token, {
           httpOnly: true,
@@ -85,7 +85,7 @@ async function run() {
     app.get("/services", async (req, res) => {
       const cursor = homeServiceCollections.find();
       const services = await cursor.toArray();
-      console.log(services);
+      // console.log(services);
       res.send(services);
     });
     app.get("/services/:id", async (req, res) => {
@@ -123,14 +123,18 @@ async function run() {
         // console.log(req.query.email + " user query email");
         return res.send("you are not allowed to see this");
       }
-      const result = await bookingCollections
-        .find(query)
-        .skip(page * size)
-        .limit(size)
-        .toArray();
-      const count = await bookingCollections.countDocuments(query);
-      console.log(count);
-      res.send(result);
+      try {
+        const result = await bookingCollections
+          .find(query)
+          .skip(page * size)
+          .limit(size)
+          .toArray();
+        const count = await bookingCollections.countDocuments(query);
+        // console.log(count);
+        res.send(result);
+      } catch (error) {
+        res.send(error);
+      }
     });
     // single booking
     app.get("/bookings/:id", async (req, res) => {
@@ -195,5 +199,5 @@ run().catch(console.dir);
 
 app.get("/", (req, res) => res.send("Hello World!"));
 app.listen(port, () =>
-  console.log(`Example on   app listening on port ${port}!`)
+  console.log(`Example on   app listening on ports ${port}!`)
 );
