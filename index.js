@@ -102,6 +102,16 @@ async function run() {
       const result = await bookingCollections.find(query).toArray();
       res.send(result);
     });
+    // single booking
+    app.get("/bookings/:id", async (req, res) => {
+      console.log(req.params.id);
+      const result = await bookingCollections.findOne({
+        _id: new ObjectId(req.params.id),
+      });
+
+      console.log(result);
+      res.send(result);
+    });
     app.post("/jwtlogout", async (req, res) => {
       res.clearCookie("token");
     });
@@ -112,6 +122,9 @@ async function run() {
       const result = await bookingCollections.insertOne(data);
       //   console.log(result);
       res.send(result);
+    });
+    app.patch("/booking/:id", vereifyToken, async (req, res) => {
+      console.log(req.user.id, req.params.id);
     });
     app.delete("/booking/:id", async (req, res) => {
       const id = req.params.id;
