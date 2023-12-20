@@ -8,6 +8,15 @@ require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
 app.use(cors({ origin: ["http://localhost:5173"], credentials: true }));
+// app.use(
+//   cors({
+//     origin: [
+//       "https://book-swap-64d94.web.app",
+//       "https://book-swap-64d94.firebaseapp.com",
+//     ],
+//     credentials: true,
+//   })
+// );
 app.use(express.json());
 app.use(cookieParser());
 const uri = `mongodb+srv://House-services:${process.env.DB_PASSWORD}@Home-service.wlfdec9.mongodb.net/?retryWrites=true&w=majority`;
